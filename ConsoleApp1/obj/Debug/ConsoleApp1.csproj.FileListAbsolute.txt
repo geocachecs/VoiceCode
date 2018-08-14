@@ -1,0 +1,14 @@
+C:\Users\GTHJ\source\repos\ConsoleApp1\ConsoleApp1\bin\Debug\ConsoleApp1.exe.config
+C:\Users\GTHJ\source\repos\ConsoleApp1\ConsoleApp1\bin\Debug\ConsoleApp1.exe
+C:\Users\GTHJ\source\repos\ConsoleApp1\ConsoleApp1\bin\Debug\ConsoleApp1.pdb
+C:\Users\GTHJ\source\repos\ConsoleApp1\ConsoleApp1\obj\Debug\ConsoleApp1.csprojAssemblyReference.cache
+C:\Users\GTHJ\source\repos\ConsoleApp1\ConsoleApp1\obj\Debug\ConsoleApp1.csproj.CoreCompileInputs.cache
+C:\Users\GTHJ\source\repos\ConsoleApp1\ConsoleApp1\obj\Debug\ConsoleApp1.exe
+C:\Users\GTHJ\source\repos\ConsoleApp1\ConsoleApp1\obj\Debug\ConsoleApp1.pdb
+C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\ConsoleApp1.csprojAssemblyReference.cache
+C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\ConsoleApp1.csproj.CoreCompileInputs.cache
+C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\bin\Debug\ConsoleApp2.exe.config
+C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\bin\Debug\ConsoleApp2.exe
+C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\bin\Debug\ConsoleApp2.pdb
+C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\ConsoleApp2.exe
+C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\ConsoleApp2.pdb
