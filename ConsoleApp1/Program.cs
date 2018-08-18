@@ -92,6 +92,22 @@ namespace ConsoleApp2
 
         }
 
+        static void Test(params object[] args)
+        {
+            foreach(object s in args)
+            {
+                if(s is String)
+                    Console.WriteLine(s);
+                else if(s is List<String>)
+                {
+                    foreach(String m in (List<String>) s)
+                    {
+                        Console.WriteLine(m);
+                    }
+                }
+                    Console.WriteLine("something else");
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -99,6 +115,14 @@ namespace ConsoleApp2
             //Console.WriteLine(x2());
             //Console.ReadKey();
             //return;
+            List<String> xl = new List<string>();
+            String n = "coo";
+            xl.Add(n);
+            n = "cat";
+            Test("cat",xl,"dog");
+
+
+
 
             GrammarBuilder gb = new GrammarBuilder();
             GrammarBuilder gb2 = new GrammarBuilder();

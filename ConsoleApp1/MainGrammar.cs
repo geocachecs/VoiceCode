@@ -18,7 +18,7 @@ namespace ConsoleApp2
                 "X-ray", "Yankee", "Zulu"};
         static private string[] phonetic_alpha_OUTPUT = new string[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k",
                 "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
-
+        
         static private string[] shift_phonetic_alpha_COMMAND = new string[] {"Shift Alfa", "Shift Bravo", "Shift Charlie", "Shift Delta",
                 "Shift Echo", "Shift Foxtrot", "Shift Golf", "Shift Hotel", "Shift India", "Shift Juliett", "Shift Kilo",
                 "Shift Lima", "Shift Mike", "Shift November", "Shift Oscar", "Shift Papa", "Shift Quebec", "Shift Romeo",

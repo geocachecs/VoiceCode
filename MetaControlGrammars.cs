@@ -33,13 +33,28 @@ public class MetaControlGrammars
     //    return gb_tmp;
     //}
 
-    public static GrammarBuilder enableProfile()
+    
+
+    private static GrammarBuilder createMetaControl(String metaControlName, params object[] parameters )
     {
         GrammarBuilder gb = new GrammarBuilder();
-        Choices profileNames = new Choices();
+        Sem
+        gb.Append()
+    }
+
+    public static GrammarBuilder enableProfile(List<String> profileNames)
+    {
+        GrammarBuilder gb = new GrammarBuilder();
+
+        Choices profileChoices = new Choices();
 
         SemanticResultValue semval = new SemanticResultValue("semval_ENABLEPROFILE","Enable Profile");
         gb.Append( new SemanticResultKey("semkey_METACONTROLNAME",semval) );
+        foreach(String profile in profileNames)
+        {
+            profileChoices.Add(new SemanticResultValue("semval_"+profile.ToUpper(), profile ) );
+        }
+        gb.Append(new SemanticResultKey("semkey_PARAMETER1", profileChoices));
                     //////////////////NOT DONE YET
             
     }
