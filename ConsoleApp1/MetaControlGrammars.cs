@@ -35,7 +35,7 @@ public class MetaControlGrammars
                 {
                     theseChoices.Add(new SemanticResultValue("++semval: "+str, str)); ///////// if there is an error, check here
                 }
-                paramVal.Add(theseChoices);
+                paramVal.Add(theseChoices); 
             }
             else
             {
@@ -63,11 +63,11 @@ public class MetaControlGrammars
     {
         return createMetaControl("Enable Profile", profileNames);
     }
-    public static GrammarBuilder disableProfile(List<String> profileNames)
+    public static GrammarBuilder DisableProfile(List<String> profileNames)
     {
         return createMetaControl("Disable Profile", profileNames);
     }
-    public static GrammarBuilder editProfile(List<String> profileNames)
+    public static GrammarBuilder EditProfile(List<String> profileNames)
     {
         return createMetaControl("Edit Profile", profileNames);
     }

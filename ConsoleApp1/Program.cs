@@ -22,75 +22,7 @@ namespace ConsoleApp2
     class Program
     {
 
-        const int MAX_PHRASE_LENGTH = 10;
-
-        /*
-        static void sr_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
-        {
-            Console.WriteLine(e.Result.Text);
-        }
-        */
-
-        static void HandleSpeechRecognizedEvent(object sender,SpeechRecognizedEventArgs e)
-        {
-            string s="";
-            string output = "";
-            string[] hold;
-            int mult;
-
-            Console.WriteLine(e.Result.Text);
-            for(int i=0; i<MAX_PHRASE_LENGTH; i++)
-            {
-                s = "";
-                if (e.Result.Semantics.ContainsKey($"base_{i}"))
-                {
-                    hold = new string[3];
-                    mult = 1;
-                    if (e.Result.Semantics.ContainsKey($"hold_a_{i}"))
-                        hold[0] = e.Result.Semantics[$"hold_a_{i}"].Value.ToString();
-                    if (e.Result.Semantics.ContainsKey($"hold_b_{i}"))
-                        hold[1] = e.Result.Semantics[$"hold_b_{i}"].Value.ToString();
-                    if (e.Result.Semantics.ContainsKey($"hold_c_{i}"))
-                        hold[2] = e.Result.Semantics[$"hold_c_{i}"].Value.ToString();
-
-
-                    hold = hold.Distinct().ToArray();
-                    foreach (string j in hold)
-                        s += j;
-
-                    if (e.Result.Semantics[$"base_{i}"].Value.ToString() == "{SPACE}")
-                    {
-                        s += " ";
-                    }
-                    else if (e.Result.Semantics[$"base_{i}"].Value.ToString() == "{EQUAL}")
-                    {
-                        s += "=";
-                    }
-                    else
-                    {
-                        s += e.Result.Semantics[$"base_{i}"].Value.ToString();
-                    }
-
-                    if (e.Result.Semantics.ContainsKey($"mult_{i}"))
-                        if (Int32.TryParse(e.Result.Semantics[$"mult_{i}"].Value.ToString(), out mult))
-                        {
-                            // for debug
-                        }
-                        else
-                        {
-                            mult = 1;
-                        }
-                    for (int j = 0; j < mult; j++)
-                        output += s;
-                }
-            }
-
-
-            Console.WriteLine(output);
-
-            SendKeys.SendWait(output);
-
-        }
+        
 
         static void Test(params object[] args)
         {
@@ -129,7 +61,7 @@ namespace ConsoleApp2
             Grammar g;
             SpeechRecognitionEngine sre = new SpeechRecognitionEngine();
             
-            sre.SetInputToDefaultAudioDevice();
+            //sre.SetInputToDefaultAudioDevice();
 
             
             gb = MainGrammar.GetBaseGrammar(10);
@@ -142,20 +74,28 @@ namespace ConsoleApp2
             //SrgsDocument sr = new SrgsDocument(XmlReader.Create(@"Grammars/test.xml"));
             
             //g = new Grammar(new SrgsDocument(XmlReader.Create(@"Grammars/test.xml")));
-            g = new Grammar(@"Grammars/test.xml");
-            //g = new Grammar(gb);
+            //g = new Grammar(@"Grammars/test.xml");
+            g = new Grammar(gb);
             //sre.LoadGrammarAsync(g); ///IMPORTANT
 
             //sre.BabbleTimeout = TimeSpan.FromSeconds(0);
             //sre.EndSilenceTimeout = TimeSpan.FromSeconds(0);
             //sre.EndSilenceTimeoutAmbiguous = TimeSpan.FromSeconds(0);
-            MetaControl test = new MetaControl(sre);
-            sre.LoadGrammar(test.MetaGrammar())  ;
+
+            //MetaControl test = new MetaControl(sre);
+            //sre.LoadGrammar(test.MetaGrammar())  ;
+
             //void zz = MetaControl.HandleMetaGrammar(sre);
-            sre.SpeechRecognized += test.HandleMetaGrammar;
-            sre.SpeechRecognized += HandleSpeechRecognizedEvent;
-            sre.RecognizeAsync(RecognizeMode.Multiple);
-            
+            //sre.SpeechRecognized += test.HandleMetaGrammar;       // these could be handled added in the grammar classes
+            sre.LoadGrammarAsync(new Grammar(MainGrammar.GetMainGrammar()));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
+            sre.SpeechRecognized += MainGrammar.HandleMainGrammar;
+          //  MainGrammar phonetic = new MainGrammar(sre); // I wonder if this will work
+                                                         // Also whether it is good design
+                                                         // to add the handler in this way
+            //sre.RecognizeAsync(RecognizeMode.Multiple);
+            System.Threading.Thread.Sleep(2000);
+            sre.EmulateRecognizeAsync("Alfa 4 times");
+            Console.WriteLine("here");
             while (true)
             {
                 

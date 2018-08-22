@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Speech.Recognition;
+using System.Windows.Forms;
 using System.Speech.Recognition.SrgsGrammar;
 using System.Xml;
 
@@ -12,7 +13,71 @@ namespace ConsoleApp2
     class MainGrammar
     {
 
-       static private string[] phonetic_alpha_COMMAND = new string[] {"Alfa", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot",
+        static int MAX_PHRASE_LENGTH = 10;
+
+        static public void HandleMainGrammar(object sender, SpeechRecognizedEventArgs e)
+        {
+            string s = "";
+            string output = "";
+            string[] hold;
+            int mult;
+
+            Console.WriteLine(e.Result.Text);
+            for (int i = 0; i < MAX_PHRASE_LENGTH; i++)
+            {
+                s = "";
+                if (e.Result.Semantics.ContainsKey($"base_{i}"))
+                {
+                    hold = new string[3];
+                    mult = 1;
+                    if (e.Result.Semantics.ContainsKey($"hold_a_{i}"))
+                        hold[0] = e.Result.Semantics[$"hold_a_{i}"].Value.ToString();
+                    if (e.Result.Semantics.ContainsKey($"hold_b_{i}"))
+                        hold[1] = e.Result.Semantics[$"hold_b_{i}"].Value.ToString();
+                    if (e.Result.Semantics.ContainsKey($"hold_c_{i}"))
+                        hold[2] = e.Result.Semantics[$"hold_c_{i}"].Value.ToString();
+
+
+                    hold = hold.Distinct().ToArray();
+                    foreach (string j in hold)
+                        s += j;
+
+                    if (e.Result.Semantics[$"base_{i}"].Value.ToString() == "{SPACE}")
+                    {
+                        s += " ";
+                    }
+                    else if (e.Result.Semantics[$"base_{i}"].Value.ToString() == "{EQUAL}")
+                    {
+                        s += "=";
+                    }
+                    else
+                    {
+                        s += e.Result.Semantics[$"base_{i}"].Value.ToString();
+                    }
+
+                    if (e.Result.Semantics.ContainsKey($"mult_{i}"))
+                        if (Int32.TryParse(e.Result.Semantics[$"mult_{i}"].Value.ToString(), out mult))
+                        {
+                            // for debug
+                        }
+                        else
+                        {
+                            mult = 1;
+                        }
+                    for (int j = 0; j < mult; j++)
+                        output += s;
+                }
+            }
+            Console.WriteLine(output);
+            SendKeys.SendWait(output);
+        }
+
+
+
+
+
+
+        static private string[] phonetic_alpha_COMMAND = new string[] {"Alfa", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot",
                 "Golf", "Hotel", "India", "Juliett", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec",
                 "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey",
                 "X-ray", "Yankee", "Zulu"};
@@ -99,7 +164,7 @@ namespace ConsoleApp2
             return s;
         }
 
-        static public GrammarBuilder GetBaseGrammar(int n = 1)
+        static public GrammarBuilder GetMainGrammar(int n = 1)
         {
             GrammarBuilder gb = new GrammarBuilder();
 
