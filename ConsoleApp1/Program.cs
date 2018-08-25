@@ -47,83 +47,32 @@ namespace ConsoleApp2
             //Console.WriteLine(x2());
             //Console.ReadKey();
             //return;
-            List<String> xl = new List<string>();
-            String n = "coo";
-            xl.Add(n);
-            n = "cat";
-            Test("cat",xl,"dog");
+
+            
 
 
 
-
-            GrammarBuilder gb = new GrammarBuilder();
-            GrammarBuilder gb2 = new GrammarBuilder();
-            Grammar g;
             SpeechRecognitionEngine sre = new SpeechRecognitionEngine();
-            
-            //sre.SetInputToDefaultAudioDevice();
+            QuickGrammar testQuick = new QuickGrammar("test.txt");
 
-            
-            gb = MainGrammar.GetBaseGrammar(10);
-            
-            XmlWriter x = XmlWriter.Create(@"Grammars/test.xml");
-            new SrgsDocument(gb).WriteSrgs(x);
-            x.Close();
-            
-            //XmlReader xw = XmlReader.Create(@"Grammars/test.xml");
-            //SrgsDocument sr = new SrgsDocument(XmlReader.Create(@"Grammars/test.xml"));
-            
-            //g = new Grammar(new SrgsDocument(XmlReader.Create(@"Grammars/test.xml")));
-            //g = new Grammar(@"Grammars/test.xml");
-            g = new Grammar(gb);
-            //sre.LoadGrammarAsync(g); ///IMPORTANT
-
-            //sre.BabbleTimeout = TimeSpan.FromSeconds(0);
-            //sre.EndSilenceTimeout = TimeSpan.FromSeconds(0);
-            //sre.EndSilenceTimeoutAmbiguous = TimeSpan.FromSeconds(0);
-
-            //MetaControl test = new MetaControl(sre);
-            //sre.LoadGrammar(test.MetaGrammar())  ;
-
-            //void zz = MetaControl.HandleMetaGrammar(sre);
-            //sre.SpeechRecognized += test.HandleMetaGrammar;       // these could be handled added in the grammar classes
-            sre.LoadGrammarAsync(new Grammar(MainGrammar.GetMainGrammar()));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
+            sre.LoadGrammarAsync(new Grammar(testQuick.GetQuickGrammar()));
+            sre.SpeechRecognized += testQuick.HandleQuickGrammar;
+            sre.LoadGrammarAsync(new Grammar(MainGrammar.GetMainGrammar(10)));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
             sre.SpeechRecognized += MainGrammar.HandleMainGrammar;
-          //  MainGrammar phonetic = new MainGrammar(sre); // I wonder if this will work
-                                                         // Also whether it is good design
-                                                         // to add the handler in this way
-            //sre.RecognizeAsync(RecognizeMode.Multiple);
-            System.Threading.Thread.Sleep(2000);
-            sre.EmulateRecognizeAsync("Alfa 4 times");
+
+                    
+            sre.SetInputToDefaultAudioDevice();
+            sre.RecognizeAsync(RecognizeMode.Multiple);
+            //System.Threading.Thread.Sleep(2000);
+            //sre.EmulateRecognizeAsync("Bravo 4 times");
+
             Console.WriteLine("here");
             while (true)
             {
                 
-                /*
-                if( (result = sre.RecognizeAsync(RecognizeMode.Multiple)) != null)
-                {
-                    //if (result.Semantics.ContainsKey("basic"))
-                    //    Console.WriteLine(result.Semantics["basic"].Value);
-                    //if(result.Semantics.ContainsKey("advanced"))
-                    //    Console.WriteLine(result.Semantics["advanced"].Value);
-                    //SendKeys.SendWait("^+{TAb}");
-                    Console.WriteLine(result.Text);
-                }
-                */
+
             }
 
-            
-
-            
-
-
-
-
-            while (true)
-            {
-
-        //        SendKeys.SendWait(  );
-            }
             
 
         }
@@ -206,3 +155,11 @@ while (true) {
 }
 ///////////
 */
+
+
+//XmlWriter x = XmlWriter.Create(@"Grammars/test.xml");
+//new SrgsDocument(gb).WriteSrgs(x);
+//x.Close();
+
+//XmlReader xw = XmlReader.Create(@"Grammars/test.xml");
+//SrgsDocument sr = new SrgsDocument(XmlReader.Create(@"Grammars/test.xml"));
