@@ -1,0 +1,17 @@
+static:static
+new:new
+umm:
+uhh:
+String:String
+int:int
+Grammar Builder:GrammarBuilder
+Grammar:Grammar
+Dictionary:Dictionary
+private:private
+public:public
+while:while
+if:if
+Choices:Choices
+return:return
+Console:Console
+SendKeys:SendKeys

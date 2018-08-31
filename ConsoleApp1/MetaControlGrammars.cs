@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Speech.Recognition.SrgsGrammar;
 using System.Speech.Recognition;
+using System.IO;
 using System.Xml;
 
 
@@ -14,7 +15,7 @@ using System.Xml;
 public class MetaControlGrammars
 {
 
-    private static GrammarBuilder createMetaControl(String metaControlName, params object[] parameters )
+    private static GrammarBuilder createMetaControlGB(String metaControlName, params object[] parameters )
     {
         GrammarBuilder gb = new GrammarBuilder();
         SemanticResultValue controlName_val = new SemanticResultValue("++semval: "+metaControlName, metaControlName);
@@ -61,17 +62,35 @@ public class MetaControlGrammars
 
     public static GrammarBuilder EnableProfile(List<String> profileNames)
     {
-        return createMetaControl("Enable Profile", profileNames);
+        return createMetaControlGB("Enable Profile", profileNames);
     }
     public static GrammarBuilder DisableProfile(List<String> profileNames)
     {
-        return createMetaControl("Disable Profile", profileNames);
+        return createMetaControlGB("Disable Profile", profileNames);
     }
     public static GrammarBuilder EditProfile(List<String> profileNames)
     {
-        return createMetaControl("Edit Profile", profileNames);
+        return createMetaControlGB("Edit Profile", profileNames);
     }
 //    public static GrammarBuilder createProfile() { }
+    
+    public static void ConfigureSRE(ref SpeechRecognitionEngine sre, String directory)
+    {
+        List<String> profileNames = new List<string>();
+        FileInfo[] Files = new DirectoryInfo(@directory).GetFiles("*.txt"); //Getting Text files
+        foreach (FileInfo file in Files)
+        {
+            profileNames.Add(file.Name.Split('.')[0]);
+        }
 
+        sre.LoadGrammarAsync(new Grammar(EnableProfile(profileNames)));
+        //sre.SpeechRecognized += Handle_EnableProfile;
+        sre.LoadGrammarAsync(new Grammar(DisableProfile(profileNames)));
+        //sre.SpeechRecognized += Handle_DisableProfile;
+        sre.LoadGrammarAsync(new Grammar(EditProfile(profileNames)));
+        //sre.SpeechRecognized += Handle_EditProfile;
+        
+
+    }
 
 }

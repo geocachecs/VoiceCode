@@ -17,6 +17,12 @@ namespace ConsoleApp2
         private Dictionary<String, String> grammar_mappings = new Dictionary<string, string>();
         private String Filename;
 
+        public void ConfigureSRE(ref SpeechRecognitionEngine sre)
+        {
+            sre.LoadGrammarAsync(new Grammar(GetQuickGrammar()));
+            sre.SpeechRecognized += HandleQuickGrammar;
+        }
+
         public QuickGrammar(String fn)
         {
             Filename = fn;

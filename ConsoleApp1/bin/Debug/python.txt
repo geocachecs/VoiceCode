@@ -1,0 +1,9 @@
+String:String
+self:self
+None:None
+in:in
+for:for
+if:if
+define:def
+umm:
+uhh:

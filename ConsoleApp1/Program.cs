@@ -53,23 +53,28 @@ namespace ConsoleApp2
 
 
             SpeechRecognitionEngine sre = new SpeechRecognitionEngine();
-            QuickGrammar testQuick = new QuickGrammar("test.txt");
+            QuickGrammar testQuick = new QuickGrammar("csharp.txt");
 
-            sre.LoadGrammarAsync(new Grammar(testQuick.GetQuickGrammar()));
-            sre.SpeechRecognized += testQuick.HandleQuickGrammar;
-            sre.LoadGrammarAsync(new Grammar(MainGrammar.GetMainGrammar(10)));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
-            sre.SpeechRecognized += MainGrammar.HandleMainGrammar;
+            //sre.LoadGrammarAsync(new Grammar(testQuick.GetQuickGrammar()));
+            //sre.SpeechRecognized += testQuick.HandleQuickGrammar;
+            testQuick.ConfigureSRE(ref sre);
+            //sre.LoadGrammarAsync(new Grammar(MainGrammar.GetMainGrammar(10)));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
+            //sre.SpeechRecognized += MainGrammar.HandleMainGrammar;
+            MainGrammar.ConfigureSRE(ref sre);
 
-                    
-            sre.SetInputToDefaultAudioDevice();
-            sre.RecognizeAsync(RecognizeMode.Multiple);
-            //System.Threading.Thread.Sleep(2000);
-            //sre.EmulateRecognizeAsync("Bravo 4 times");
+            MetaControlGrammars.ConfigureSRE(ref sre,@".\Grammars");
 
+            //sre.SetInputToDefaultAudioDevice();
+            //sre.RecognizeAsync(RecognizeMode.Multiple);
+            sre.EmulateRecognizeAsync("Bravo 4 times");
+            System.Threading.Thread.Sleep(3000);
+            sre.EmulateRecognizeAsync("static");
+            System.Threading.Thread.Sleep(3000);
+            sre.EmulateRecognizeAsync("csharp");
             Console.WriteLine("here");
             while (true)
             {
-                
+                System.Threading.Thread.Sleep(10000);
 
             }
 

@@ -15,6 +15,12 @@ namespace ConsoleApp2
 
         static int MAX_PHRASE_LENGTH = 10;
 
+        public static void ConfigureSRE(ref SpeechRecognitionEngine sre)
+        {
+            sre.LoadGrammarAsync(new Grammar(GetMainGrammar(10)));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
+            sre.SpeechRecognized += HandleMainGrammar;
+        }
+
         static public void HandleMainGrammar(object sender, SpeechRecognizedEventArgs e)
         {
             string s = "";
@@ -80,9 +86,9 @@ namespace ConsoleApp2
         static private string[] phonetic_alpha_COMMAND = new string[] {"Alfa", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot",
                 "Golf", "Hotel", "India", "Juliett", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec",
                 "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey",
-                "X-ray", "Yankee", "Zulu"};
+                "X-ray", "Yankee", "Zulu", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Zero"};
         static private string[] phonetic_alpha_OUTPUT = new string[] { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k",
-                "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"};
+                "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
         
         static private string[] shift_phonetic_alpha_COMMAND = new string[] {"Shift Alfa", "Shift Bravo", "Shift Charlie", "Shift Delta",
                 "Shift Echo", "Shift Foxtrot", "Shift Golf", "Shift Hotel", "Shift India", "Shift Juliett", "Shift Kilo",
