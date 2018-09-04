@@ -8,17 +8,27 @@ using System.Speech.Recognition.SrgsGrammar;
 using System.Speech.Recognition;
 using System.IO;
 using System.Xml;
+using ConsoleApp2;
 
 
-// Syntax: "<MetaControlName> <Parameter1> <Parameter2> <Parameter3>"
+// Syntax: "<METACONTROLNAME> <PARAMETER1> <PARAMETER2> <PARAMETER3>"
 
 public class MetaControlGrammars
 {
 
+    private SpeechRecognitionEngine sre;
+    private String directory;
+
+    public MetaControlGrammars(SpeechRecognitionEngine sre, String directory)
+    {
+        this.sre = sre;
+        this.directory = directory;
+    }
+
     private static GrammarBuilder createMetaControlGB(String metaControlName, params object[] parameters )
     {
         GrammarBuilder gb = new GrammarBuilder();
-        SemanticResultValue controlName_val = new SemanticResultValue("++semval: "+metaControlName, metaControlName);
+        SemanticResultValue controlName_val = new SemanticResultValue(/*phrase*/metaControlName, /*value*/metaControlName);
 
         List<object> paramVal = new List<object>(); // Should be a SemanticResultValue OR Choices (with SemanticResultValues in it)
 
@@ -27,14 +37,14 @@ public class MetaControlGrammars
 
             if(parameters[i] is String)
             {
-                paramVal.Add(new SemanticResultValue("++semval: "+parameters[i], parameters[i]));
+                paramVal.Add(new SemanticResultValue( /*phrase*/(String) parameters[i], /*value*/parameters[i] ));
             } 
             else if(parameters[i] is List<String>)
             {
                 Choices theseChoices = new Choices();
                 foreach(String str in (List<String>) parameters[i])
                 {
-                    theseChoices.Add(new SemanticResultValue("++semval: "+str, str)); ///////// if there is an error, check here
+                    theseChoices.Add(new SemanticResultValue(/*phrase*/str,/*value*/str)); ///////// if there is an error, check here
                 }
                 paramVal.Add(theseChoices); 
             }
@@ -44,37 +54,55 @@ public class MetaControlGrammars
             }
         }
 
-        gb.Append(new SemanticResultKey("METABCONTROLNAME",controlName_val));
+        gb.Append(new SemanticResultKey("METACONTROLNAME",controlName_val));
         for (int i = 0; i < paramVal.Count; i++)
         {
             if(paramVal[i] is Choices)
             {
-                gb.Append(new SemanticResultKey("PARAMETER" + i.ToString(), (Choices)paramVal[i]));
+                gb.Append(new SemanticResultKey("PARAMETER" + (i+1).ToString(), (Choices)paramVal[i]));
             }
             else if(paramVal[i] is SemanticResultValue)
             {
-                gb.Append(new SemanticResultKey("PARAMETER" + i.ToString(), (SemanticResultValue)paramVal[i]));
+                gb.Append(new SemanticResultKey("PARAMETER" + (i+1).ToString(), (SemanticResultValue)paramVal[i]));
             }
         }
 
         return gb;
     }
 
-    public static GrammarBuilder EnableProfile(List<String> profileNames)
+    private static GrammarBuilder EnableProfile(List<String> profileNames)
     {
         return createMetaControlGB("Enable Profile", profileNames);
     }
-    public static GrammarBuilder DisableProfile(List<String> profileNames)
+    private static GrammarBuilder DisableProfile(List<String> profileNames)
     {
         return createMetaControlGB("Disable Profile", profileNames);
     }
-    public static GrammarBuilder EditProfile(List<String> profileNames)
+    private static GrammarBuilder EditProfile(List<String> profileNames)
     {
         return createMetaControlGB("Edit Profile", profileNames);
     }
-//    public static GrammarBuilder createProfile() { }
-    
-    public static void ConfigureSRE(ref SpeechRecognitionEngine sre, String directory)
+    //    private static GrammarBuilder createProfile() { }
+
+    private void Handle_metacontrol_all(object sender, SpeechRecognizedEventArgs e)
+    {
+        // Must make sure a metacontrol grammar is being used
+        if (e.Result.Semantics.ContainsKey("METACONTROLNAME"))
+        {
+            String MetaControlName = e.Result.Semantics["METACONTROLNAME"].Value.ToString();
+            if (MetaControlName == "Enable Profile")
+            {
+                String grammarName = e.Result.Semantics["PARAMETER1"].Value.ToString();
+                QuickGrammar qg = new QuickGrammar(directory + "\\" + grammarName + ".txt");
+                sre.LoadGrammarAsync(new Grammar(qg.GetQuickGrammar()));
+                sre.SpeechRecognized += qg.HandleQuickGrammar;
+            }
+
+
+        }
+    }
+
+    public void ConfigureSRE(ref SpeechRecognitionEngine sre)
     {
         List<String> profileNames = new List<string>();
         FileInfo[] Files = new DirectoryInfo(@directory).GetFiles("*.txt"); //Getting Text files
@@ -83,13 +111,23 @@ public class MetaControlGrammars
             profileNames.Add(file.Name.Split('.')[0]);
         }
 
-        sre.LoadGrammarAsync(new Grammar(EnableProfile(profileNames)));
-        //sre.SpeechRecognized += Handle_EnableProfile;
-        sre.LoadGrammarAsync(new Grammar(DisableProfile(profileNames)));
-        //sre.SpeechRecognized += Handle_DisableProfile;
-        sre.LoadGrammarAsync(new Grammar(EditProfile(profileNames)));
-        //sre.SpeechRecognized += Handle_EditProfile;
-        
+        GrammarBuilder metacontrolgb_all = new GrammarBuilder();
+        Choices c = new Choices();
+        c.Add(EnableProfile(profileNames));
+        c.Add(DisableProfile(profileNames));
+        c.Add(EditProfile(profileNames));
+        metacontrolgb_all.Append(c);
+
+        sre.LoadGrammarAsync(new Grammar(metacontrolgb_all));
+        sre.SpeechRecognized += Handle_metacontrol_all;
+
+        //sre.LoadGrammarAsync(new Grammar(EnableProfile(profileNames)));
+        ////sre.SpeechRecognized += Handle_EnableProfile;
+        //sre.LoadGrammarAsync(new Grammar(DisableProfile(profileNames)));
+        ////sre.SpeechRecognized += Handle_DisableProfile;
+        //sre.LoadGrammarAsync(new Grammar(EditProfile(profileNames)));
+        ////sre.SpeechRecognized += Handle_EditProfile;
+
 
     }
 

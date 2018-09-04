@@ -61,17 +61,21 @@ namespace ConsoleApp2
             //sre.LoadGrammarAsync(new Grammar(MainGrammar.GetMainGrammar(10)));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
             //sre.SpeechRecognized += MainGrammar.HandleMainGrammar;
             MainGrammar.ConfigureSRE(ref sre);
-
-            MetaControlGrammars.ConfigureSRE(ref sre,@".\Grammars");
+            MetaControlGrammars mcg = new MetaControlGrammars(sre, @".\Grammars");
+            mcg.ConfigureSRE(ref sre);
 
             //sre.SetInputToDefaultAudioDevice();
             //sre.RecognizeAsync(RecognizeMode.Multiple);
-            sre.EmulateRecognizeAsync("Bravo 4 times");
+            
+            //sre.EmulateRecognizeAsync("Bravo 4 times");
+            //System.Threading.Thread.Sleep(3000);
+            //sre.EmulateRecognizeAsync("static");
+            System.Threading.Thread.Sleep(3000);
+            sre.EmulateRecognizeAsync("Enable Profile csharp");
+            Console.WriteLine("here");
             System.Threading.Thread.Sleep(3000);
             sre.EmulateRecognizeAsync("static");
-            System.Threading.Thread.Sleep(3000);
-            sre.EmulateRecognizeAsync("csharp");
-            Console.WriteLine("here");
+
             while (true)
             {
                 System.Threading.Thread.Sleep(10000);

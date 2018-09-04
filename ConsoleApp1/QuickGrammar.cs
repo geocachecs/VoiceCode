@@ -26,6 +26,7 @@ namespace ConsoleApp2
         public QuickGrammar(String fn)
         {
             Filename = fn;
+            Console.WriteLine(fn);
         }
 
         public GrammarBuilder GetQuickGrammar()
