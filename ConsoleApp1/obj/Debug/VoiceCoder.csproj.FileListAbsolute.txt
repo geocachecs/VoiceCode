@@ -5,3 +5,10 @@ C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\VoiceCoder.csprojAs
 C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\VoiceCoder.csproj.CoreCompileInputs.cache
 C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\ConsoleApp2.exe
 C:\Users\GTHJ\source\repos\ConsoleApp2\ConsoleApp1\obj\Debug\ConsoleApp2.pdb
+C:\Users\GTHJ\Documents\Projects\VoiceCode\VoiceCode\ConsoleApp1\bin\Debug\ConsoleApp2.exe.config
+C:\Users\GTHJ\Documents\Projects\VoiceCode\VoiceCode\ConsoleApp1\bin\Debug\ConsoleApp2.exe
+C:\Users\GTHJ\Documents\Projects\VoiceCode\VoiceCode\ConsoleApp1\bin\Debug\ConsoleApp2.pdb
+C:\Users\GTHJ\Documents\Projects\VoiceCode\VoiceCode\ConsoleApp1\obj\Debug\VoiceCoder.csprojAssemblyReference.cache
+C:\Users\GTHJ\Documents\Projects\VoiceCode\VoiceCode\ConsoleApp1\obj\Debug\VoiceCoder.csproj.CoreCompileInputs.cache
+C:\Users\GTHJ\Documents\Projects\VoiceCode\VoiceCode\ConsoleApp1\obj\Debug\ConsoleApp2.exe
+C:\Users\GTHJ\Documents\Projects\VoiceCode\VoiceCode\ConsoleApp1\obj\Debug\ConsoleApp2.pdb
