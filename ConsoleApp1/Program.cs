@@ -22,24 +22,30 @@ namespace ConsoleApp2
     class Program
     {
 
-        
+       
 
-        static void Test(params object[] args)
+
+        static void HandleTest(object sender, SpeechRecognizedEventArgs e)
         {
-            foreach(object s in args)
+            for (var i=0; i< e.Result.Alternates.Count; i++)
             {
-                if(s is String)
-                    Console.WriteLine(s);
-                else if(s is List<String>)
-                {
-                    foreach(String m in (List<String>) s)
-                    {
-                        Console.WriteLine(m);
-                    }
+                System.Console.WriteLine(e.Result.Alternates[i].Text);
+                for (var j = 0; j < e.Result.Alternates[i].Words.Count; j++) {
+                    String s = e.Result.Alternates[i].Words[j].Text;
+                    var x = e.Result.Alternates[i].Words[j].Confidence;
+                    System.Console.WriteLine("Word: {0}\nConfidence: {1}\n", s, x);
                 }
-                    Console.WriteLine("something else");
+                System.Console.WriteLine("===========\n\n");
+            }
+
+        }
+
+        static void dumbtest(ref SpeechRecognitionEngine sre) {
+            if (sre == null) {
+                System.Console.WriteLine("oklol");
             }
         }
+
 
         static void Main(string[] args)
         {
@@ -48,37 +54,43 @@ namespace ConsoleApp2
             //Console.ReadKey();
             //return;
 
-            
+
+            string text = System.IO.File.ReadAllText(@"test.screenlog");
 
 
-
-            SpeechRecognitionEngine sre = new SpeechRecognitionEngine();
-            QuickGrammar testQuick = new QuickGrammar("csharp.txt");
-
-            //sre.LoadGrammarAsync(new Grammar(testQuick.GetQuickGrammar()));
-            //sre.SpeechRecognized += testQuick.HandleQuickGrammar;
-            testQuick.ConfigureSRE(ref sre);
-            //sre.LoadGrammarAsync(new Grammar(MainGrammar.GetMainGrammar(10)));                                                      //sre.SpeechRecognized += HandleSpeechRecognizedEvent;  // these could be handled added in the grammar classes
-            //sre.SpeechRecognized += MainGrammar.HandleMainGrammar;
-            MainGrammar.ConfigureSRE(ref sre);
-            MetaControlGrammars mcg = new MetaControlGrammars(sre, @".\Grammars");
-            mcg.ConfigureSRE(ref sre);
-
+            //Choices c1 = new Choices();
+            //c1.Add("green");
+            //c1.Add("blue");
+            //
+            //Choices c2 = new Choices();
+            //c2.Add("cat");
+            //c2.Add("dog");
+            //c2.Add("bat");
+            //
+            //GrammarBuilder gb = new GrammarBuilder();
+            //gb.Append(c1);
+            //gb.Append(c2);
+            //Grammar myGrammar = new Grammar(gb);
+            //
+            //SpeechRecognitionEngine sre = new SpeechRecognitionEngine();
+            //System.Console.WriteLine("ok");
+            //sre.UnloadAllGrammars();
+            //sre.LoadGrammarAsync(myGrammar);
+            //System.Console.WriteLine("done");
+            //
+            //sre.SpeechRecognized += HandleTest;
+            //
+            //
             //sre.SetInputToDefaultAudioDevice();
             //sre.RecognizeAsync(RecognizeMode.Multiple);
-            
-            //sre.EmulateRecognizeAsync("Bravo 4 times");
-            //System.Threading.Thread.Sleep(3000);
-            //sre.EmulateRecognizeAsync("static");
-            System.Threading.Thread.Sleep(3000);
-            sre.EmulateRecognizeAsync("Enable Profile csharp");
-            Console.WriteLine("here");
-            System.Threading.Thread.Sleep(3000);
-            sre.EmulateRecognizeAsync("static");
 
+            SpeechRecognitionEngine sre = null;
+            SmartGrammars smartg = new SmartGrammars(@"C:\Users\g\Documents\transcripts");
             while (true)
             {
-                System.Threading.Thread.Sleep(10000);
+                Program.dumbtest(ref sre);
+                smartg.UpdateSRE(ref sre);
+                System.Threading.Thread.Sleep(2000);
 
             }
 
