@@ -9,6 +9,12 @@ using System.IO;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 
+
+// issues: 
+//  recognition is spotty -- don't know why...
+//  occasional 'RaceOnRCWCleanup' error - appears to occur when too many grammars are unloaded at once!
+
+
 namespace ConsoleApp2
 {
     class SmartGrammars
@@ -23,17 +29,19 @@ namespace ConsoleApp2
 
 
         private long lastGrammarPurge;
-        private long MAX_MILLISECONDS_BETWEEN_PURGE = 30000;
+        private long MAX_MILLISECONDS_BETWEEN_PURGE = 5000;
         private int MAX_SMARTWORD_LIST_LENGTH = 1000;
         private string directory;
         private List<string> smartWords;
         public Grammar smartGrammar;
 
+        private readonly object grammarLock = new object();
 
         public SmartGrammars(string directory)
         {
             this.directory = directory;
             this.smartWords = new List<string>();
+            this.smartWords.Add("supercalifragilisticexpialidocious"); // to prevent exceptions when the log file is not available
             this.smartGrammar = null;
             this.lastGrammarPurge = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
@@ -96,47 +104,54 @@ namespace ConsoleApp2
             gb.Append(c_smartWords, 1,10);
 
             this.smartGrammar = new Grammar(gb);
-            this.smartGrammar.Name = "SmartGrammar";
-            
+            this.smartGrammar.Priority = 1;
+            this.smartGrammar.Weight = 1;
+            this.smartGrammar.Name = "NEW_SmartGrammar";
+
+
         }
 
         public void HandleSpeechRecognized(object sender, SpeechRecognizedEventArgs e) {
             //System.Console.WriteLine(e.Result.Text);
 
-            String output = "";
-            string thisword;
-            //{ "camel", "score", "allcaps", "nocaps" }
-            string keyword = e.Result.Words[0].Text;
-            for (int i = 1; i < e.Result.Words.Count; i++)
+            if (e.Result.Grammar.Name == "OLD_SmartGrammar" || e.Result.Grammar.Name == "SmartGrammar" || e.Result.Grammar.Name == "NEW_SmartGrammar")
             {
-                thisword = e.Result.Words[i].Text;
-                switch (keyword)
+                System.Console.WriteLine(e.Result.Grammar.Name);
+                String output = "";
+                string thisword;
+                //{ "camel", "score", "allcaps", "nocaps" }
+                string keyword = e.Result.Words[0].Text;
+                for (int i = 1; i < e.Result.Words.Count; i++)
                 {
-                    case "camel":
-                        output += Char.ToUpper(thisword[0]) + thisword.Substring(1);
-                        break;
-                    case "score":
-                        output += thisword + "_";
-                        break;
-                    case "allcaps":
-                        output += thisword.ToUpper();
-                        break;
-                    case "nocaps":
-                        output += thisword.ToLower();
-                        break;
-                    default:
-                        break;
+                    thisword = e.Result.Words[i].Text;
+                    switch (keyword)
+                    {
+                        case "camel":
+                            output += Char.ToUpper(thisword[0]) + thisword.Substring(1);
+                            break;
+                        case "score":
+                            output += thisword + "_";
+                            break;
+                        case "allcaps":
+                            output += thisword.ToUpper();
+                            break;
+                        case "nocaps":
+                            output += thisword.ToLower();
+                            break;
+                        default:
+                            break;
+                    }
+
                 }
-                
-            }
-            if(keyword == "score")
-            {
-                output = output.TrimEnd('_');
+                if (keyword == "score")
+                {
+                    output = output.TrimEnd('_');
 
-            }
+                }
 
-            System.Console.WriteLine(output);
-            SendKeys.SendWait(output);
+                System.Console.WriteLine(output);
+                SendKeys.SendWait(output);
+            }
 
             // Surreptitiously remove the old grammars
             SpeechRecognitionEngine sre = (SpeechRecognitionEngine)sender;
@@ -144,40 +159,57 @@ namespace ConsoleApp2
 
         }
 
-        public void UpdateSRE(ref SpeechRecognitionEngine sre) {
+
+        public void ConfigureSRE(ref SpeechRecognitionEngine sre)
+        {
             this.setSmartWords();
             this.setSmartGrammar();
 
             if (sre == null)
             {
                 sre = new SpeechRecognitionEngine();
-                sre.LoadGrammar(this.smartGrammar);
-                sre.SpeechRecognized += HandleSpeechRecognized;
-                sre.SetInputToDefaultAudioDevice();
-                sre.RecognizeAsync(RecognizeMode.Multiple);
-            }
-            else
-            {
-                foreach (Grammar g in sre.Grammars) { 
-                    if(g.Name == "SmartGrammar")
-                    {
-                        g.Name = "OLD_SmartGrammar";
-                    }
-                }
-
-                sre.LoadGrammar(this.smartGrammar);
-
             }
 
-            if( DateTime.Now.Ticks/TimeSpan.TicksPerMillisecond - this.lastGrammarPurge > MAX_MILLISECONDS_BETWEEN_PURGE)
-            {
-                this.RemoveOldGrammars(ref sre);
-            }
+            sre.LoadGrammar(this.smartGrammar);
+            sre.SpeechRecognized += this.HandleSpeechRecognized;
 
 
         }
 
+        public void UpdateSRE(ref SpeechRecognitionEngine sre) {
+            this.setSmartWords();
+            this.setSmartGrammar();
 
+            sre.LoadGrammar(this.smartGrammar);
+
+            // if exception handler removes a grammar, an exception happens here
+            lock (grammarLock)
+            {
+                foreach (Grammar g in sre.Grammars)
+                {
+                    if (g.Name == "SmartGrammar")
+                    {
+                        g.Priority = -128;
+                        g.Weight = 0;
+                        g.Name = "OLD_SmartGrammar";
+
+                    }
+                    else if (g.Name == "NEW_SmartGrammar")
+                    {
+                        g.Name = "SmartGrammar";
+                    }
+                }
+
+            }
+            
+            if( DateTime.Now.Ticks/TimeSpan.TicksPerMillisecond - this.lastGrammarPurge > MAX_MILLISECONDS_BETWEEN_PURGE)
+            {
+                this.RemoveOldGrammars(ref sre);
+            }
+        }
+
+
+        // NOT thread safe
         private void RemoveOldGrammars(ref SpeechRecognitionEngine sre)
         {
             List<Grammar> oldGrammars = new List<Grammar>();
@@ -192,13 +224,22 @@ namespace ConsoleApp2
             }
             foreach (Grammar g in oldGrammars)
             {
-                sre.UnloadGrammar(g);
+                lock (grammarLock)
+                {
+                    try
+                    {
+                        sre.UnloadGrammar(g);
+                    }
+                    catch (Exception e)
+                    {
+                        continue;
+                    }
+                }
+                
             }
 
             this.lastGrammarPurge = DateTime.Now.Ticks/ TimeSpan.TicksPerMillisecond;
         }
-
-
 
 
     }

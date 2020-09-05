@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.Speech.Recognition.SrgsGrammar;
 using System.Speech.Recognition;
 using System.Xml;
+using Newtonsoft.Json;
 
 namespace ConsoleApp2
 {
@@ -22,8 +23,11 @@ namespace ConsoleApp2
     class Program
     {
 
-       
-
+        private static void Usage(string[] args)
+        {
+            Console.WriteLine("\nUsage:\n\t" + "VoiceCoder" + " <log file folder> <custom grammars folder>\n\n");
+            Application.Exit();
+        }
 
         static void HandleTest(object sender, SpeechRecognizedEventArgs e)
         {
@@ -49,52 +53,41 @@ namespace ConsoleApp2
 
         static void Main(string[] args)
         {
-            //Func<int> x2 = MetaControl.Test(88);
-            //Console.WriteLine(x2());
-            //Console.ReadKey();
+            //string json = "{\"key1\":{\"subkey1\":\"value1\"},\"key2\":{\"subkey2\":\"value2\"}}";
+            //string json = "{\"key1\":{\"subkey1\":\"value1\"},\"key2\":{\"subkey2\":\"value2\"}}";
+            //Dictionary<string, Dictionary<string, string>> x = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, string>>>(json);
+            //Console.WriteLine("ok");
+            //System.Console.ReadKey();
             //return;
 
+            if(args.Length != 2)
+            {
+                Console.WriteLine(args.Length);
+                Usage(args);
+            }
+                    
 
             string text = System.IO.File.ReadAllText(@"test.screenlog");
 
-
-            //Choices c1 = new Choices();
-            //c1.Add("green");
-            //c1.Add("blue");
-            //
-            //Choices c2 = new Choices();
-            //c2.Add("cat");
-            //c2.Add("dog");
-            //c2.Add("bat");
-            //
-            //GrammarBuilder gb = new GrammarBuilder();
-            //gb.Append(c1);
-            //gb.Append(c2);
-            //Grammar myGrammar = new Grammar(gb);
-            //
-            //SpeechRecognitionEngine sre = new SpeechRecognitionEngine();
-            //System.Console.WriteLine("ok");
-            //sre.UnloadAllGrammars();
-            //sre.LoadGrammarAsync(myGrammar);
-            //System.Console.WriteLine("done");
-            //
-            //sre.SpeechRecognized += HandleTest;
-            //
-            //
-            //sre.SetInputToDefaultAudioDevice();
-            //sre.RecognizeAsync(RecognizeMode.Multiple);
-
             SpeechRecognitionEngine sre = null;
             SmartGrammars smartg = new SmartGrammars(@"C:\Users\g\Documents\transcripts");
+            smartg.ConfigureSRE(ref sre);
+            CustomGrammars cg = new CustomGrammars(@"C:\Users\g\Documents\transcripts\customconfig.txt");
+
+            cg.ConfigureSRE(ref sre);
+            sre.SetInputToDefaultAudioDevice();
+            sre.RecognizeAsync(RecognizeMode.Multiple);
+
+
             while (true)
             {
-                Program.dumbtest(ref sre);
-                smartg.UpdateSRE(ref sre);
+
+                smartg.UpdateSRE(ref sre); // the handler doesn't work when this is commented out??
                 System.Threading.Thread.Sleep(2000);
 
             }
 
-            
+
 
         }
 
