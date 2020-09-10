@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
+using System.Text.RegularExpressions;
+
 
 
 // issues: 
@@ -17,9 +19,9 @@ using System.Windows.Forms.VisualStyles;
 
 namespace ConsoleApp2
 {
-    class SmartGrammars
+    class SmartGrammars : GrammarClass
     {
-        private static string[] keyWords = { "camel", "score", "allcaps", "nocaps" };
+        private static string[] keyWords = { "camel", "snake", "allcaps", "nocaps", "low-camel", "low-camel-snake", "camel-snake" };
 
         private static char[] delim = { '\x1', '\x2', '\x3', '\x4', '\x5', '\x6', '\x7', '\x8', '\x9', '\xa', '\xb', '\xc', '\xd', '\xe', '\xf',
                     '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1a', '\x1b', '\x1c', '\x1d', '\x1e',
@@ -27,49 +29,66 @@ namespace ConsoleApp2
                     '\x2e', '\x2f', '\x3a', '\x3b', '\x3c', '\x3d', '\x3e', '\x3f', '\x40', '\x5b', '\x5c', '\x5d', '\x5f', '\x5e', '\x60', '\x7b',
                     '\x7c', '\x7d', '\x7e', '\x7f' };
 
+        private static string[] phonetic_alphabet = { "a-b-c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
+                    "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" };
+
 
         private long lastGrammarPurge;
         private long MAX_MILLISECONDS_BETWEEN_PURGE = 5000;
         private int MAX_SMARTWORD_LIST_LENGTH = 1000;
-        private string directory;
+        private string filename;
+        private string smartGrammarName;
         private List<string> smartWords;
         public Grammar smartGrammar;
 
-        private readonly object grammarLock = new object();
 
-        public SmartGrammars(string directory)
+        //private static readonly object grammarLock = new object();
+
+        public SmartGrammars(string filename)
         {
-            this.directory = directory;
+            this.filename = filename;
             this.smartWords = new List<string>();
             this.smartWords.Add("supercalifragilisticexpialidocious"); // to prevent exceptions when the log file is not available
             this.smartGrammar = null;
+
+            string[] filename_tmp = this.filename.Split('\\');
+            this.smartGrammarName = "SmartGrammar_" + filename_tmp[filename_tmp.Length-1];
+
             this.lastGrammarPurge = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
 
         private void setSmartWords()
         {
             string screenBufText;
-            string[] filenames;
-            string[] tmpwords;
+            string[] strarray;
+            List<string> tmpwords_A = new List<string>();
+            List<string> tmpwords_B = new List<string>();
+            List<string> allwords = new List<string>();
 
-
-            filenames = Directory.GetFiles(directory);
-            foreach (string filename in filenames)
+            try
             {
-                try
-                {
-                    screenBufText = System.IO.File.ReadAllText(filename);
-                }
-                catch
-                {
-                    continue;
-                }
-                    
+                screenBufText = System.IO.File.ReadAllText(this.filename);
+
                 //File.Delete(filename);
-                tmpwords = screenBufText.Split(SmartGrammars.delim, StringSplitOptions.RemoveEmptyEntries);
-                foreach (string word in tmpwords)
+                strarray = screenBufText.Split(SmartGrammars.delim, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string word in strarray)
                 {
-                    if(word.Length > 2)
+
+
+                    tmpwords_A.AddRange( Regex.Split(word, @"(?=[A-Z])(\B)(?<=[a-z])") );
+                    
+                }
+                foreach (string word in tmpwords_A)
+                {
+                    tmpwords_B.AddRange( Regex.Split(word, @"(?=[A-Za-z])(\B)(?<=[0-9])|(?=[0-9])(\B)(?<=[A-Za-z])") );
+                    
+                }
+
+                allwords.AddRange(tmpwords_B);
+
+                foreach (string word in allwords.ToArray())
+                {
+                    if(word.Length > 2 || int.TryParse(word, out _))
                     {
                         this.smartWords.Remove(word.ToLower());
                         this.smartWords.Add(word.ToLower());
@@ -84,7 +103,14 @@ namespace ConsoleApp2
                         }
                     }
                 }
-            }      
+
+
+            }
+            catch
+            {
+                ;
+            }
+
         }
 
         private void setSmartGrammar() {  
@@ -106,15 +132,14 @@ namespace ConsoleApp2
             this.smartGrammar = new Grammar(gb);
             this.smartGrammar.Priority = 1;
             this.smartGrammar.Weight = 1;
-            this.smartGrammar.Name = "NEW_SmartGrammar";
+            this.smartGrammar.Name = this.smartGrammarName; // "NEW_" + this.smartGrammarName;
 
 
         }
 
-        public void HandleSpeechRecognized(object sender, SpeechRecognizedEventArgs e) {
-            //System.Console.WriteLine(e.Result.Text);
+        public override void HandleSpeechRecognized(object sender, SpeechRecognizedEventArgs e) {
 
-            if (e.Result.Grammar.Name == "OLD_SmartGrammar" || e.Result.Grammar.Name == "SmartGrammar" || e.Result.Grammar.Name == "NEW_SmartGrammar")
+            if (e.Result.Grammar.Name == "OLD_" + this.smartGrammarName || e.Result.Grammar.Name == this.smartGrammarName || e.Result.Grammar.Name == "NEW_" + this.smartGrammarName)
             {
                 System.Console.WriteLine(e.Result.Grammar.Name);
                 String output = "";
@@ -129,9 +154,33 @@ namespace ConsoleApp2
                         case "camel":
                             output += Char.ToUpper(thisword[0]) + thisword.Substring(1);
                             break;
-                        case "score":
+                        case "snake":
                             output += thisword + "_";
                             break;
+                        case "low-camel":
+                            if (i != 1)
+                            {
+                                output += Char.ToUpper(thisword[0]) + thisword.Substring(1);
+                            }
+                            else
+                            {
+                                output += thisword;
+                            }
+                            break;
+                        case "camel-snake":
+                            output += Char.ToUpper(thisword[0]) + thisword.Substring(1) + "_";
+                            break;
+                        case "low-camel-snake":
+                            if (i != 1)
+                            {
+                                output += Char.ToUpper(thisword[0]) + thisword.Substring(1) + "_";
+                            }
+                            else
+                            {
+                                output += thisword + "_";
+                            }
+                            break;
+
                         case "allcaps":
                             output += thisword.ToUpper();
                             break;
@@ -143,7 +192,7 @@ namespace ConsoleApp2
                     }
 
                 }
-                if (keyword == "score")
+                if (keyword == "snake" || keyword == "camel-snake" || keyword == "low-camel-snake")
                 {
                     output = output.TrimEnd('_');
 
@@ -154,13 +203,16 @@ namespace ConsoleApp2
             }
 
             // Surreptitiously remove the old grammars
+            this.setSmartWords();
+            this.setSmartGrammar();
             SpeechRecognitionEngine sre = (SpeechRecognitionEngine)sender;
             RemoveOldGrammars(ref sre);
+            sre.LoadGrammar(this.smartGrammar);
 
         }
 
 
-        public void ConfigureSRE(ref SpeechRecognitionEngine sre)
+        public override void ConfigureSRE(ref SpeechRecognitionEngine sre)
         {
             this.setSmartWords();
             this.setSmartGrammar();
@@ -172,68 +224,37 @@ namespace ConsoleApp2
 
             sre.LoadGrammar(this.smartGrammar);
             sre.SpeechRecognized += this.HandleSpeechRecognized;
-
-
         }
 
-        public void UpdateSRE(ref SpeechRecognitionEngine sre) {
-            this.setSmartWords();
-            this.setSmartGrammar();
-
-            sre.LoadGrammar(this.smartGrammar);
-
-            // if exception handler removes a grammar, an exception happens here
-            lock (grammarLock)
-            {
-                foreach (Grammar g in sre.Grammars)
-                {
-                    if (g.Name == "SmartGrammar")
-                    {
-                        g.Priority = -128;
-                        g.Weight = 0;
-                        g.Name = "OLD_SmartGrammar";
-
-                    }
-                    else if (g.Name == "NEW_SmartGrammar")
-                    {
-                        g.Name = "SmartGrammar";
-                    }
-                }
-
-            }
-            
-            if( DateTime.Now.Ticks/TimeSpan.TicksPerMillisecond - this.lastGrammarPurge > MAX_MILLISECONDS_BETWEEN_PURGE)
-            {
-                this.RemoveOldGrammars(ref sre);
-            }
+        public override void UpdateSRE(ref SpeechRecognitionEngine sre) {
+            throw new NotImplementedException();
         }
 
-
-        // NOT thread safe
         private void RemoveOldGrammars(ref SpeechRecognitionEngine sre)
         {
             List<Grammar> oldGrammars = new List<Grammar>();
 
-            foreach (Grammar g in sre.Grammars)
+            lock (GrammarClass.grammarLock)
             {
-                if (g.Name == "OLD_SmartGrammar")
-                {
-                    oldGrammars.Add(g);
 
-                }
-            }
-            foreach (Grammar g in oldGrammars)
-            {
-                lock (grammarLock)
+                foreach (Grammar g in sre.Grammars)
                 {
-                    try
+                    if (g.Name == this.smartGrammarName)
                     {
-                        sre.UnloadGrammar(g);
+                        oldGrammars.Add(g);
                     }
-                    catch (Exception e)
-                    {
-                        continue;
-                    }
+                }
+
+                foreach (Grammar g in oldGrammars)
+                {
+                        try
+                        {
+                            sre.UnloadGrammar(g);
+                        }
+                        catch (Exception e)
+                        {
+                            continue;
+                        }
                 }
                 
             }
