@@ -34,7 +34,7 @@ namespace ConsoleApp2
 
 
         private long lastGrammarPurge;
-        private long MAX_MILLISECONDS_BETWEEN_PURGE = 5000;
+        private long MAX_MILLISECONDS_BETWEEN_PURGE = 10000;
         private int MAX_SMARTWORD_LIST_LENGTH = 1000;
         private string filename;
         private string smartGrammarName;
@@ -70,16 +70,19 @@ namespace ConsoleApp2
                 screenBufText = System.IO.File.ReadAllText(this.filename);
 
                 //File.Delete(filename);
+
+                // split by delim characters
                 strarray = screenBufText.Split(SmartGrammars.delim, StringSplitOptions.RemoveEmptyEntries);
+                
                 foreach (string word in strarray)
                 {
-
-
+                    // split by Boundaries from lowercase to uppercase
                     tmpwords_A.AddRange( Regex.Split(word, @"(?=[A-Z])(\B)(?<=[a-z])") );
                     
                 }
                 foreach (string word in tmpwords_A)
                 {
+                    // split by letter/number boundaries
                     tmpwords_B.AddRange( Regex.Split(word, @"(?=[A-Za-z])(\B)(?<=[0-9])|(?=[0-9])(\B)(?<=[A-Za-z])") );
                     
                 }
@@ -138,6 +141,8 @@ namespace ConsoleApp2
         }
 
         public override void HandleSpeechRecognized(object sender, SpeechRecognizedEventArgs e) {
+            Console.WriteLine(e.Result.Grammar.Name);
+            Console.WriteLine(e.Result.Text);
 
             if (e.Result.Grammar.Name == "OLD_" + this.smartGrammarName || e.Result.Grammar.Name == this.smartGrammarName || e.Result.Grammar.Name == "NEW_" + this.smartGrammarName)
             {
@@ -203,15 +208,17 @@ namespace ConsoleApp2
             }
 
             // Surreptitiously remove the old grammars
-            this.setSmartWords();
-            this.setSmartGrammar();
-            SpeechRecognitionEngine sre = (SpeechRecognitionEngine)sender;
-            RemoveOldGrammars(ref sre);
-            sre.LoadGrammar(this.smartGrammar);
+            SpeechRecognitionEngine sender_sre = (SpeechRecognitionEngine)sender;
+            updateGrammars(ref sender_sre);
+            //this.setSmartWords();
+            //this.setSmartGrammar();
+            //SpeechRecognitionEngine sre = (SpeechRecognitionEngine)sender;
+            //RemoveOldGrammars(ref sre);
+            //sre.LoadGrammar(this.smartGrammar);
 
         }
 
-
+        
         public override void ConfigureSRE(ref SpeechRecognitionEngine sre)
         {
             this.setSmartWords();
@@ -227,12 +234,19 @@ namespace ConsoleApp2
         }
 
         public override void UpdateSRE(ref SpeechRecognitionEngine sre) {
-            throw new NotImplementedException();
+            if (this.lastGrammarPurge - DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond > this.MAX_MILLISECONDS_BETWEEN_PURGE)
+            {
+                updateGrammars(ref sre);
+            }
+
         }
 
-        private void RemoveOldGrammars(ref SpeechRecognitionEngine sre)
+
+        private void updateGrammars(ref SpeechRecognitionEngine sre)
         {
             List<Grammar> oldGrammars = new List<Grammar>();
+            this.setSmartWords();
+            this.setSmartGrammar();
 
             lock (GrammarClass.grammarLock)
             {
@@ -247,19 +261,20 @@ namespace ConsoleApp2
 
                 foreach (Grammar g in oldGrammars)
                 {
-                        try
-                        {
-                            sre.UnloadGrammar(g);
-                        }
-                        catch (Exception e)
-                        {
-                            continue;
-                        }
+                    try
+                    {
+                        sre.UnloadGrammar(g);
+                    }
+                    catch (Exception e)
+                    {
+                        continue;
+                    }
                 }
-                
+                sre.LoadGrammar(this.smartGrammar);
+                this.lastGrammarPurge = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             }
 
-            this.lastGrammarPurge = DateTime.Now.Ticks/ TimeSpan.TicksPerMillisecond;
+
         }
 
 

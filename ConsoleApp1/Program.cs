@@ -32,6 +32,8 @@ namespace ConsoleApp2
             Application.Exit();
         }
 
+        
+
         static void HandleTest(object sender, SpeechRecognizedEventArgs e)
         {
             for (var i=0; i< e.Result.Alternates.Count; i++)
@@ -47,18 +49,21 @@ namespace ConsoleApp2
 
         }
 
-        static void Main(string[] args)
+
+        //private static readonly object smartGrammarLock = new object();
+        //static private void updateAllSmartGrammars(string directorypath, ref SpeechRecognitionEngine sre)
+        //{
+
+        //}
+
+
+        private static List<SmartGrammars> smartGrammarList;
+        private static string[] allScreenBufferFilenames;
+        static private void configureAllSmartGrammars(string directorypath, ref SpeechRecognitionEngine sre)
         {
 
-            if(args.Length != 2)
-            {
-                Usage(args);
-            }
-                    
-            SpeechRecognitionEngine sre = null;
-
-            List<SmartGrammars> smartGrammarList = new List<SmartGrammars>();
-            string[] allScreenBufferFilenames = Directory.GetFiles(args[0]);
+            smartGrammarList = new List<SmartGrammars>();
+            allScreenBufferFilenames = Directory.GetFiles(directorypath);
             foreach (string filename in allScreenBufferFilenames)
             {
 
@@ -71,10 +76,28 @@ namespace ConsoleApp2
                 }
                 catch
                 {
-                    Console.WriteLine("Could not parse " + filename);
+                    Console.WriteLine("configureAllSmartGrammars: Could not parse " + filename);
                 }
 
             }
+
+
+        }
+
+
+
+        static void Main(string[] args)
+        {
+
+            if(args.Length != 2)
+            {
+                Usage(args);
+            }
+                    
+            SpeechRecognitionEngine sre = null;
+
+
+            configureAllSmartGrammars(args[0], ref sre);
 
 
             List<CustomGrammars> customGrammarList = new List<CustomGrammars>();
@@ -97,17 +120,17 @@ namespace ConsoleApp2
             sre.SetInputToDefaultAudioDevice();
             sre.RecognizeAsync(RecognizeMode.Multiple);
 
-
+            
             while (true)
             {
 
 
-                //foreach(SmartGrammars sg in smartGrammarList)
-                //{
-                //    sg.UpdateSRE(ref sre);
-                //}
+                foreach(SmartGrammars sg in smartGrammarList)
+                {
+                    sg.UpdateSRE(ref sre);
+                }
 
-                System.Threading.Thread.Sleep(2000);
+                System.Threading.Thread.Sleep(1000);
 
             }
 
