@@ -32,11 +32,12 @@ namespace ConsoleApp2
         private static string[] phonetic_alphabet = { "a-b-c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
                     "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" };
 
-
-        private long lastGrammarPurge;
-        private long MAX_MILLISECONDS_BETWEEN_PURGE = 10000;
+        private bool active;
+        private long lastGrammarUpdate;
+        private long MAX_MILLISECONDS_BETWEEN_PURGE = 20000;
+        private long MAX_MILLISECOND_TIMEOUT = 40000;
         private int MAX_SMARTWORD_LIST_LENGTH = 1000;
-        private string filename;
+        private string directorypath;
         private string smartGrammarName;
         private List<string> smartWords;
         public Grammar smartGrammar;
@@ -44,17 +45,32 @@ namespace ConsoleApp2
 
         //private static readonly object grammarLock = new object();
 
-        public SmartGrammars(string filename)
+        //public SmartGrammars(string filename)
+        //{
+        //    this.filename = filename;
+        //    this.smartWords = new List<string>();
+        //    this.smartWords.Add("supercalifragilisticexpialidocious"); // to prevent exceptions when the log file is not available
+        //    this.smartGrammar = null;
+        //    this.active = false;
+        //
+        //    string[] filename_tmp = this.filename.Split('\\');
+        //    this.smartGrammarName = "SmartGrammar_" + filename_tmp[filename_tmp.Length-1];
+        //
+        //    this.lastGrammarUpdate = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        //}
+
+        public SmartGrammars(string directorypath)
         {
-            this.filename = filename;
+            this.directorypath = directorypath;
             this.smartWords = new List<string>();
             this.smartWords.Add("supercalifragilisticexpialidocious"); // to prevent exceptions when the log file is not available
             this.smartGrammar = null;
+            this.active = false;
 
-            string[] filename_tmp = this.filename.Split('\\');
-            this.smartGrammarName = "SmartGrammar_" + filename_tmp[filename_tmp.Length-1];
+            string[] directorypath_tmp = this.directorypath.Split('\\');
+            this.smartGrammarName = "SmartGrammar_" + directorypath[directorypath.Length - 1];
 
-            this.lastGrammarPurge = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            this.lastGrammarUpdate = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
 
         private void setSmartWords()
@@ -65,54 +81,58 @@ namespace ConsoleApp2
             List<string> tmpwords_B = new List<string>();
             List<string> allwords = new List<string>();
 
-            try
+
+            string[] allScreenBufferFilenames = Directory.GetFiles(this.directorypath);
+            foreach (string filename in allScreenBufferFilenames)
             {
-                screenBufText = System.IO.File.ReadAllText(this.filename);
+                try { 
+                    screenBufText = System.IO.File.ReadAllText(filename);
 
-                //File.Delete(filename);
+                    //File.Delete(filename); // remove when debugging is done
 
-                // split by delim characters
-                strarray = screenBufText.Split(SmartGrammars.delim, StringSplitOptions.RemoveEmptyEntries);
-                
-                foreach (string word in strarray)
-                {
-                    // split by Boundaries from lowercase to uppercase
-                    tmpwords_A.AddRange( Regex.Split(word, @"(?=[A-Z])(\B)(?<=[a-z])") );
-                    
-                }
-                foreach (string word in tmpwords_A)
-                {
-                    // split by letter/number boundaries
-                    tmpwords_B.AddRange( Regex.Split(word, @"(?=[A-Za-z])(\B)(?<=[0-9])|(?=[0-9])(\B)(?<=[A-Za-z])") );
-                    
-                }
+                    // split by delim characters
+                    strarray = screenBufText.Split(SmartGrammars.delim, StringSplitOptions.RemoveEmptyEntries);
 
-                allwords.AddRange(tmpwords_B);
-
-                foreach (string word in allwords.ToArray())
-                {
-                    if(word.Length > 2 || int.TryParse(word, out _))
+                    foreach (string word in strarray)
                     {
-                        this.smartWords.Remove(word.ToLower());
-                        this.smartWords.Add(word.ToLower());
+                        // split by Boundaries from lowercase to uppercase
+                        tmpwords_A.AddRange(Regex.Split(word, @"(?=[A-Z])(\B)(?<=[a-z])"));
 
-                        if (this.smartWords.Count() == this.MAX_SMARTWORD_LIST_LENGTH + 1)
-                        {
-                            this.smartWords.RemoveAt(0);
-                        }
-                        else if (this.smartWords.Count() > this.MAX_SMARTWORD_LIST_LENGTH + 1)
-                        {
-                            throw new Exception("There are more smartWords than should be allowed");
-                        }
+                    }
+                    foreach (string word in tmpwords_A)
+                    {
+                        // split by letter/number boundaries
+                        tmpwords_B.AddRange(Regex.Split(word, @"(?=[A-Za-z])(\B)(?<=[0-9])|(?=[0-9])(\B)(?<=[A-Za-z])"));
+
+                    }
+
+                    allwords.AddRange(tmpwords_B);
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+            foreach (string word in allwords.ToArray())
+            {
+                if(word.Length > 2 || int.TryParse(word, out _))
+                {
+                    this.smartWords.Remove(word.ToLower());
+                    this.smartWords.Add(word.ToLower());
+
+                    if (this.smartWords.Count() == this.MAX_SMARTWORD_LIST_LENGTH + 1)
+                    {
+                        this.smartWords.RemoveAt(0);
+                    }
+                    else if (this.smartWords.Count() > this.MAX_SMARTWORD_LIST_LENGTH + 1)
+                    {
+                        throw new Exception("There are more smartWords than should be allowed");
                     }
                 }
+            }
 
 
-            }
-            catch
-            {
-                ;
-            }
 
         }
 
@@ -221,20 +241,22 @@ namespace ConsoleApp2
         
         public override void ConfigureSRE(ref SpeechRecognitionEngine sre)
         {
-            this.setSmartWords();
-            this.setSmartGrammar();
-
             if (sre == null)
             {
                 sre = new SpeechRecognitionEngine();
             }
 
-            sre.LoadGrammar(this.smartGrammar);
+            this.updateGrammars(ref sre);
             sre.SpeechRecognized += this.HandleSpeechRecognized;
+            this.active = true;
         }
 
         public override void UpdateSRE(ref SpeechRecognitionEngine sre) {
-            if (this.lastGrammarPurge - DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond > this.MAX_MILLISECONDS_BETWEEN_PURGE)
+            if (this.lastGrammarUpdate - DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond > this.MAX_MILLISECONDS_BETWEEN_PURGE)
+            {
+
+            }
+            if (this.lastGrammarUpdate - DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond > this.MAX_MILLISECONDS_BETWEEN_PURGE)
             {
                 updateGrammars(ref sre);
             }
@@ -242,7 +264,7 @@ namespace ConsoleApp2
         }
 
 
-        private void updateGrammars(ref SpeechRecognitionEngine sre)
+        private bool updateGrammars(ref SpeechRecognitionEngine sre)
         {
             List<Grammar> oldGrammars = new List<Grammar>();
             this.setSmartWords();
@@ -271,10 +293,43 @@ namespace ConsoleApp2
                     }
                 }
                 sre.LoadGrammar(this.smartGrammar);
-                this.lastGrammarPurge = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+                
             }
+            this.lastGrammarUpdate = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            return true;
+        }
 
 
+        private void deactivate(ref SpeechRecognitionEngine sre)
+        {
+            List<Grammar> oldGrammars = new List<Grammar>();
+            
+
+            lock (GrammarClass.grammarLock)
+            {
+
+                foreach (Grammar g in sre.Grammars)
+                {
+                    if (g.Name == this.smartGrammarName)
+                    {
+                        oldGrammars.Add(g);
+                    }
+                }
+
+                foreach (Grammar g in oldGrammars)
+                {
+                    try
+                    {
+                        sre.UnloadGrammar(g);
+                    }
+                    catch (Exception e)
+                    {
+                        continue;
+                    }
+                }
+               
+
+            }
         }
 
 

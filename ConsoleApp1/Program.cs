@@ -59,45 +59,23 @@ namespace ConsoleApp2
 
         private static List<SmartGrammars> smartGrammarList;
         private static string[] allScreenBufferFilenames;
-        static private void configureAllSmartGrammars(string directorypath, ref SpeechRecognitionEngine sre)
-        {
-
-            smartGrammarList = new List<SmartGrammars>();
-            allScreenBufferFilenames = Directory.GetFiles(directorypath);
-            foreach (string filename in allScreenBufferFilenames)
-            {
-
-                try
-                {
-                    Console.WriteLine(filename);
-                    SmartGrammars sg = new SmartGrammars(filename);
-                    smartGrammarList.Add(sg);
-                    sg.ConfigureSRE(ref sre);
-                }
-                catch
-                {
-                    Console.WriteLine("configureAllSmartGrammars: Could not parse " + filename);
-                }
-
-            }
-
-
-        }
+       
 
 
 
         static void Main(string[] args)
         {
 
-            if(args.Length != 2)
+            if (args.Length != 2)
             {
                 Usage(args);
             }
                     
             SpeechRecognitionEngine sre = null;
 
+            SmartGrammars sg = new SmartGrammars(args[0]);
+            sg.ConfigureSRE(ref sre);
 
-            configureAllSmartGrammars(args[0], ref sre);
 
 
             List<CustomGrammars> customGrammarList = new List<CustomGrammars>();
@@ -125,10 +103,9 @@ namespace ConsoleApp2
             {
 
 
-                foreach(SmartGrammars sg in smartGrammarList)
-                {
-                    sg.UpdateSRE(ref sre);
-                }
+
+                sg.UpdateSRE(ref sre);
+
 
                 System.Threading.Thread.Sleep(1000);
 
